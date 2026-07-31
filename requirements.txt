@@ -1,0 +1,5 @@
+requests
+flask
+gunicorn
+psycopg2
+bs4
