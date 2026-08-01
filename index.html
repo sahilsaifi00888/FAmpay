@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FamPay Verify API</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080b12;
+    --surface: #0e1320;
+    --border: #1a2235;
+    --green: #00f5a0;
+    --green2: #00d9f5;
+    --text: #e8eaf0;
+    --muted: #5a6478;
+    --card: #111827;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 0;
+    position: sticky; top: 0;
+    background: rgba(8,11,18,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  nav .container { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'Space Mono', monospace; font-size: 1rem; color: var(--green); letter-spacing: 2px; }
+  .logo span { color: var(--text); }
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color .2s; }
+  .nav-links a:hover { color: var(--green); }
+
+  /* HERO */
+  .hero {
+    padding: 90px 0 60px;
+    text-align: center;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(0,245,160,0.08);
+    border: 1px solid rgba(0,245,160,0.2);
+    color: var(--green);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .hero h1 .highlight {
+    background: linear-gradient(135deg, var(--green), var(--green2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    color: var(--muted);
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto 36px;
+    line-height: 1.7;
+  }
+  .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--green), var(--green2));
+    color: #000;
+    font-weight: 700;
+    padding: 12px 28px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: 'Syne', sans-serif;
+    transition: opacity .2s, transform .2s;
+    text-decoration: none;
+  }
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 12px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: 'Syne', sans-serif;
+    transition: border-color .2s;
+    text-decoration: none;
+  }
+  .btn-outline:hover { border-color: var(--green); color: var(--green); }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 50px 0;
+  }
+  .stat {
+    background: var(--card);
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--green); font-family: 'Space Mono', monospace; }
+  .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  /* SECTION */
+  .section { padding: 60px 0; }
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--green);
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+  }
+  .section h2 { font-size: 1.9rem; font-weight: 800; margin-bottom: 12px; }
+  .section p.sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 40px; line-height: 1.6; }
+
+  /* HOW IT WORKS */
+  .steps { display: grid; gap: 16px; }
+  .step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    transition: border-color .2s;
+  }
+  .step:hover { border-color: rgba(0,245,160,0.3); }
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--green);
+    background: rgba(0,245,160,0.08);
+    border: 1px solid rgba(0,245,160,0.2);
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-content h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .step-content p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  /* REGISTER FORM */
+  #register { padding: 60px 0; }
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+  }
+  .form-row { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus { border-color: var(--green); }
+  .hint { font-size: 0.75rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .hint a { color: var(--green); text-decoration: none; }
+  .btn-full { width: 100%; padding: 14px; font-size: 1rem; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--green), var(--green2)); color: #000; font-weight: 700; font-family: 'Syne', sans-serif; cursor: pointer; transition: opacity .2s; }
+  .btn-full:hover { opacity: 0.88; }
+  .btn-full:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* API KEY RESULT */
+  .api-result {
+    display: none;
+    background: rgba(0,245,160,0.05);
+    border: 1px solid rgba(0,245,160,0.25);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+  }
+  .api-result.show { display: block; }
+  .api-result h3 { color: var(--green); font-size: 1rem; margin-bottom: 12px; }
+  .api-key-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .copy-btn {
+    background: rgba(0,245,160,0.1);
+    border: 1px solid rgba(0,245,160,0.2);
+    color: var(--green);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Space Mono', monospace;
+  }
+  .copy-btn:hover { background: rgba(0,245,160,0.2); }
+
+  /* DOCS */
+  .docs-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .docs-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .method {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+  .post { background: rgba(0,245,160,0.15); color: var(--green); }
+  .endpoint { font-family: 'Space Mono', monospace; font-size: 0.85rem; color: var(--text); }
+  .endpoint-desc { font-size: 0.8rem; color: var(--muted); margin-left: auto; }
+  .code-block {
+    padding: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #a8b4c8;
+    overflow-x: auto;
+  }
+  .code-block .k { color: #569cd6; }
+  .code-block .s { color: #ce9178; }
+  .code-block .c { color: #5a6478; }
+  .code-block .v { color: var(--green); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    transition: all .2s;
+  }
+  .tab.active { background: rgba(0,245,160,0.1); border-color: rgba(0,245,160,0.3); color: var(--green); }
+
+  /* ERROR / MSG */
+  .msg { font-size: 0.82rem; margin-top: 12px; padding: 10px 14px; border-radius: 8px; display: none; }
+  .msg.show { display: block; }
+  .msg.error { background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.2); color: #ff8080; }
+  .msg.success { background: rgba(0,245,160,0.08); border: 1px solid rgba(0,245,160,0.2); color: var(--green); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 30px 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: 'Space Mono', monospace;
+  }
+
+  @media(max-width: 600px) {
+    .stats { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2rem; }
+    .nav-links { display: none; }
+    .form-card { padding: 24px; }
+    .api-key-box { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="logo">FAMPAY<span>_VERIFY</span></div>
+    <div class="nav-links">
+      <a href="#how">How It Works</a>
+      <a href="#register">Get API Key</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#docs">Docs</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="badge">⚡ FAMPAY PAYMENT VERIFICATION</div>
+    <h1>Verify FamPay Payments<br/><span class="highlight">Instantly & Automatically</span></h1>
+    <p>Apne Telegram bot me FamPay payment auto-verify karo. Register karo, API key lo, integrate karo — bas 3 steps.</p>
+    <div class="hero-btns">
+      <a href="#register" class="btn-primary">Get Free API Key</a>
+      <a href="#docs" class="btn-outline">View Docs</a>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">~2s</div>
+        <div class="stat-label">Verify Speed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Auto Verified</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">Free</div>
+        <div class="stat-label">No Cost</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="section-label">// HOW IT WORKS</div>
+    <h2>3 Steps Setup</h2>
+    <p class="sub">Apne FamPay wali Gmail + App Password se register karo. API key milegi. Bas woh key apne bot me lagao.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Gmail App Password Banao</h3>
+          <p>FamPay transaction emails jis Gmail pe aate hain, us Gmail ka App Password banao. Normal password kaam nahi karega — sirf App Password. <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--green)">Click here →</a></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>Register Karo → API Key Lo</h3>
+          <p>Neeche form me apna Gmail aur App Password daalo. Hum Gmail verify karenge aur tumhe ek unique API key denge. Yeh key tumhari identity hai.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Bot Me Integrate Karo</h3>
+          <p>API key aur docs ke saath apne Telegram bot me /verify endpoint call karo. User UTR + amount dega, API instantly verify karega — auto balance add!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGISTER -->
+  <section id="register" class="section">
+    <div class="section-label">// GET STARTED</div>
+    <h2>Free API Key Lo</h2>
+    <p class="sub">Sirf Gmail + App Password chahiye. Koi OTP nahi, koi signup nahi.</p>
+
+    <div class="form-card">
+      <div class="form-row">
+        <label>GMAIL ADDRESS</label>
+        <input type="email" id="gmail" placeholder="tumhara@gmail.com"/>
+        <div class="hint">FamPay wali Gmail — jis pe transaction emails aate hain</div>
+      </div>
+      <div class="form-row">
+        <label>GMAIL APP PASSWORD</label>
+        <input type="password" id="apppass" placeholder="xxxxxxxxxxxxxxxxxxxx"/>
+        <div class="hint">
+          Normal Gmail password nahi — App Password chahiye.<br/>
+          <a href="https://myaccount.google.com/apppasswords" target="_blank">myaccount.google.com/apppasswords</a> se banao (16 chars, spaces hata do)
+        </div>
+      </div>
+      <button class="btn-full" id="registerBtn" onclick="doRegister()">Get My API Key →</button>
+      <div class="msg" id="regMsg"></div>
+
+      <div class="api-result" id="apiResult">
+        <h3>✅ Tumhari API Key</h3>
+        <div class="api-key-box">
+          <span id="apiKeyText"></span>
+          <button class="copy-btn" onclick="copyKey()">Copy</button>
+        </div>
+        <div class="hint" style="margin-top:12px">⚠️ Yeh key safe rakhna. Kisi ko share mat karna. Neeche docs padho integrate kaise kare.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="section">
+    <div class="section-label">// MANAGE YOUR KEY</div>
+    <h2>Dashboard</h2>
+    <p class="sub">Apna active key dekho, delete karo, aur purani deleted keys ki history dekho.</p>
+
+    <div class="form-card">
+      <div class="form-row">
+        <label>GMAIL ADDRESS</label>
+        <input type="email" id="dash-gmail" placeholder="tumhara@gmail.com"/>
+      </div>
+      <div class="form-row">
+        <label>GMAIL APP PASSWORD</label>
+        <input type="password" id="dash-pass" placeholder="xxxxxxxxxxxxxxxx"/>
+      </div>
+      <button class="btn-full" onclick="loadDashboard()" style="margin-bottom:0">View My Dashboard →</button>
+      <div class="msg" id="dash-msg"></div>
+    </div>
+
+    <!-- Active Key Card -->
+    <div id="active-card" style="display:none;margin-top:20px">
+      <div class="docs-card">
+        <div class="docs-header">
+          <span class="method post">ACTIVE</span>
+          <span class="endpoint">Current API Key</span>
+        </div>
+        <div style="padding:20px">
+          <div class="api-key-box" style="margin-bottom:12px">
+            <span id="dash-apikey" style="font-family:'Space Mono',monospace;font-size:0.78rem;word-break:break-all"></span>
+            <button class="copy-btn" onclick="copyDashKey()">Copy</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted)">
+              🕒 Generated: <span id="dash-created" style="color:var(--green)"></span>
+            </div>
+            <button onclick="confirmDelete()" style="background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.3);color:#ff8080;padding:8px 16px;border-radius:6px;font-size:0.8rem;cursor:pointer;font-family:'Space Mono',monospace">
+              🗑️ Delete Key
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No active key -->
+    <div id="no-key-card" style="display:none;margin-top:20px">
+      <div class="docs-card">
+        <div style="padding:24px;text-align:center;color:var(--muted);font-size:0.85rem">
+          ❌ Koi active API key nahi hai.<br/>
+          <a href="#register" style="color:var(--green);text-decoration:none">Upar register karo →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deleted Keys History -->
+    <div id="deleted-section" style="display:none;margin-top:24px">
+      <div class="section-label" style="margin-bottom:12px">// DELETED KEYS HISTORY</div>
+      <div id="deleted-list"></div>
+    </div>
+  </section>
+
+  <!-- DOCS -->
+  <section id="docs" class="section">
+    <div class="section-label">// API DOCUMENTATION</div>
+    <h2>Integration Guide</h2>
+    <p class="sub">Ek hi endpoint — <code style="color:var(--green);font-family:'Space Mono',monospace">/verify</code> — call karo aur result lo.</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('python')">Python</button>
+      <button class="tab" onclick="showTab('nodejs')">Node.js</button>
+      <button class="tab" onclick="showTab('curl')">cURL</button>
+    </div>
+
+    <!-- POST /register -->
+    <div class="docs-card" style="margin-bottom:16px">
+      <div class="docs-header">
+        <span class="method post">POST</span>
+        <span class="endpoint">/register</span>
+        <span class="endpoint-desc">API key lo</span>
+      </div>
+      <div class="code-block">
+<span class="c"># Request body:</span>
+{
+  <span class="s">"gmail_user"</span>: <span class="s">"tumhara@gmail.com"</span>,
+  <span class="s">"gmail_pass"</span>: <span class="s">"xxxxxxxxxxxxxxxx"</span>
+}
+
+<span class="c"># Response:</span>
+{
+  <span class="s">"success"</span>: <span class="v">true</span>,
+  <span class="s">"api_key"</span>: <span class="s">"fmpay_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>
+}
+      </div>
+    </div>
+
+    <!-- POST /verify -->
+    <div class="docs-card">
+      <div class="docs-header">
+        <span class="method post">POST</span>
+        <span class="endpoint">/verify</span>
+        <span class="endpoint-desc">Payment verify karo</span>
+      </div>
+
+      <!-- Python tab -->
+      <div class="code-block tab-content" id="tab-python">
+<span class="k">import</span> requests
+
+API_KEY = <span class="s">"fmpay_tumhari_key_yahan"</span>
+API_URL = <span class="s">"https://fampay-verify-api.onrender.com"</span>
+
+<span class="k">def</span> <span class="v">verify_payment</span>(utr, amount):
+    res = requests.post(
+        <span class="s">f"{API_URL}/verify"</span>,
+        json={
+            <span class="s">"api_key"</span>: API_KEY,
+            <span class="s">"utr"</span>: utr,
+            <span class="s">"amount"</span>: amount
+        },
+        timeout=<span class="v">30</span>
+    )
+    data = res.json()
+
+    <span class="k">if</span> data.get(<span class="s">"verified"</span>):
+        <span class="k">return</span> <span class="v">True</span>   <span class="c"># ✅ Balance add karo</span>
+    <span class="k">elif</span> <span class="s">"already used"</span> <span class="k">in</span> str(data.get(<span class="s">"error"</span>, <span class="s">""</span>)):
+        <span class="k">return</span> <span class="s">"duplicate"</span>  <span class="c"># ❌ UTR reuse attempt</span>
+    <span class="k">else</span>:
+        <span class="k">return</span> <span class="v">False</span>  <span class="c"># ❌ Not found</span>
+      </div>
+
+      <!-- Node.js tab -->
+      <div class="code-block tab-content" id="tab-nodejs" style="display:none">
+<span class="k">const</span> axios = <span class="k">require</span>(<span class="s">'axios'</span>);
+
+<span class="k">const</span> API_KEY = <span class="s">'fmpay_tumhari_key_yahan'</span>;
+<span class="k">const</span> API_URL = <span class="s">'https://fampay-verify-api.onrender.com'</span>;
+
+<span class="k">async function</span> <span class="v">verifyPayment</span>(utr, amount) {
+  <span class="k">const</span> res = <span class="k">await</span> axios.post(<span class="s">`${API_URL}/verify`</span>, {
+    api_key: API_KEY,
+    utr: utr,
+    amount: amount
+  });
+  <span class="k">const</span> data = res.data;
+  <span class="k">if</span> (data.verified) <span class="k">return</span> <span class="s">'verified'</span>;     <span class="c">// ✅</span>
+  <span class="k">if</span> (data.error?.includes(<span class="s">'already used'</span>)) <span class="k">return</span> <span class="s">'duplicate'</span>; <span class="c">// ❌</span>
+  <span class="k">return</span> <span class="s">'failed'</span>;  <span class="c">// ❌</span>
+}
+      </div>
+
+      <!-- cURL tab -->
+      <div class="code-block tab-content" id="tab-curl" style="display:none">
+curl -X POST https://fampay-verify-api.onrender.com/verify \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d '{
+    <span class="s">"api_key"</span>: <span class="s">"fmpay_tumhari_key_yahan"</span>,
+    <span class="s">"utr"</span>: <span class="s">"614205359807"</span>,
+    <span class="s">"amount"</span>: <span class="v">500</span>
+  }'
+
+<span class="c"># Response (verified):</span>
+{
+  <span class="s">"success"</span>: <span class="v">true</span>,
+  <span class="s">"verified"</span>: <span class="v">true</span>,
+  <span class="s">"utr"</span>: <span class="s">"614205359807"</span>,
+  <span class="s">"amount"</span>: <span class="v">500.0</span>
+}
+      </div>
+    </div>
+
+    <!-- Response docs -->
+    <div class="docs-card" style="margin-top:16px">
+      <div class="docs-header">
+        <span class="method post" style="background:rgba(0,217,245,0.15);color:var(--green2)">RES</span>
+        <span class="endpoint">Response Fields</span>
+      </div>
+      <div class="code-block">
+<span class="c"># ✅ Verified</span>
+{ <span class="s">"verified"</span>: <span class="v">true</span>, <span class="s">"utr"</span>: <span class="s">"..."</span>, <span class="s">"amount"</span>: <span class="v">500</span>, <span class="s">"date"</span>: <span class="s">"..."</span> }
+
+<span class="c"># ❌ Not found</span>
+{ <span class="s">"verified"</span>: <span class="v">false</span>, <span class="s">"message"</span>: <span class="s">"Transaction nahi mila"</span> }
+
+<span class="c"># ⚠️ Duplicate UTR</span>
+{ <span class="s">"verified"</span>: <span class="v">false</span>, <span class="s">"error"</span>: <span class="s">"UTR already used! Duplicate payment."</span> }
+
+<span class="c"># ❌ Wrong API key</span>
+{ <span class="s">"success"</span>: <span class="v">false</span>, <span class="s">"error"</span>: <span class="s">"Invalid API key"</span> }
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div>FamPay Verify API — Free Payment Verification Service</div>
+  <div style="margin-top:6px;font-size:0.7rem">Not affiliated with FamPay / FamApp</div>
+</footer>
+
+<script>
+  // Dashboard
+  let dashGmail = '', dashPass = '';
+
+  async function loadDashboard() {
+    dashGmail = document.getElementById('dash-gmail').value.trim().toLowerCase();
+    dashPass  = document.getElementById('dash-pass').value.replace(/\s/g,'').trim();
+    const msg = document.getElementById('dash-msg');
+    msg.className = 'msg'; msg.style.display = 'none';
+    document.getElementById('active-card').style.display    = 'none';
+    document.getElementById('no-key-card').style.display    = 'none';
+    document.getElementById('deleted-section').style.display = 'none';
+
+    if (!dashGmail || !dashPass) {
+      msg.className = 'msg error show'; msg.textContent = 'Gmail aur App Password do!'; return;
+    }
+    msg.className = 'msg show'; msg.style.display = 'block'; msg.textContent = '⏳ Loading...'; msg.style.color = 'var(--muted)'; msg.style.background = 'transparent'; msg.style.border = 'none';
+
+    try {
+      const res  = await fetch('/my-key', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({gmail_user: dashGmail, gmail_pass: dashPass})
+      });
+      const data = await res.json();
+      msg.style.display = 'none';
+
+      if (!data.success) {
+        msg.className = 'msg error show'; msg.textContent = '❌ ' + data.error; return;
+      }
+
+      // Active key
+      if (data.active_key) {
+        document.getElementById('dash-apikey').textContent  = data.active_key.api_key;
+        document.getElementById('dash-created').textContent = data.active_key.created_at;
+        document.getElementById('active-card').style.display = 'block';
+      } else {
+        document.getElementById('no-key-card').style.display = 'block';
+      }
+
+      // Deleted history
+      if (data.deleted_keys && data.deleted_keys.length > 0) {
+        document.getElementById('deleted-section').style.display = 'block';
+        const list = document.getElementById('deleted-list');
+        list.innerHTML = data.deleted_keys.map(k => `
+          <div class="docs-card" style="margin-bottom:10px">
+            <div style="padding:16px 20px">
+              <div style="font-family:'Space Mono',monospace;font-size:0.72rem;color:#ff8080;word-break:break-all;margin-bottom:8px">
+                🗑️ ${k.api_key}
+              </div>
+              <div style="display:flex;gap:20px;flex-wrap:wrap">
+                <div style="font-size:0.75rem;color:var(--muted)">🕒 Generated: <span style="color:var(--text)">${k.created_at}</span></div>
+                <div style="font-size:0.75rem;color:var(--muted)">❌ Deleted: <span style="color:#ff8080">${k.deleted_at}</span></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch(e) {
+      msg.className = 'msg error show'; msg.textContent = '❌ Server error. Try again.';
+    }
+  }
+
+  async function confirmDelete() {
+    if (!confirm('⚠️ API key delete karna chahte ho? Yeh action undo nahi hogi!')) return;
+    try {
+      const res  = await fetch('/delete-key', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({gmail_user: dashGmail, gmail_pass: dashPass})
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ API key delete ho gaya! Ab naya key generate karo agar chahiye.');
+        loadDashboard();
+      } else {
+        alert('❌ ' + data.error);
+      }
+    } catch(e) {
+      alert('❌ Server error.');
+    }
+  }
+
+  function copyDashKey() {
+    const key = document.getElementById('dash-apikey').textContent;
+    navigator.clipboard.writeText(key).then(() => {
+      const btn = document.querySelector('#active-card .copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  // Tab switching
+  function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).style.display = 'block';
+    event.target.classList.add('active');
+  }
+
+  // Register
+  async function doRegister() {
+    const gmail = document.getElementById('gmail').value.trim();
+    const pass  = document.getElementById('apppass').value.replace(/\s/g,'').trim();
+    const btn   = document.getElementById('registerBtn');
+    const msg   = document.getElementById('regMsg');
+    const result = document.getElementById('apiResult');
+
+    msg.className = 'msg'; msg.style.display = '';
+    result.className = 'api-result';
+
+    if (!gmail || !pass) {
+      showMsg('error', 'Gmail aur App Password dono required hain!');
+      return;
+    }
+    if (!gmail.includes('@')) {
+      showMsg('error', 'Valid Gmail address do');
+      return;
+    }
+    if (pass.length < 16) {
+      showMsg('error', 'App Password 16 characters ka hota hai (spaces hata do)');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Verifying Gmail...';
+
+    try {
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({gmail_user: gmail, gmail_pass: pass})
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('apiKeyText').textContent = data.api_key;
+        result.classList.add('show');
+        if (data.message === 'Already registered') {
+          showMsg('success', '✅ Already registered — same API key shown!');
+        } else {
+          showMsg('success', '🎉 API Key successfully generate hua!');
+        }
+      } else {
+        showMsg('error', '❌ ' + (data.error || 'Something went wrong'));
+      }
+    } catch(e) {
+      showMsg('error', '❌ Server se connect nahi hua. Try again.');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Get My API Key →';
+  }
+
+  function showMsg(type, text) {
+    const el = document.getElementById('regMsg');
+    el.className = 'msg ' + type + ' show';
+    el.textContent = text;
+  }
+
+  function copyKey() {
+    const key = document.getElementById('apiKeyText').textContent;
+    navigator.clipboard.writeText(key).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+
+  // Enter key on form
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (document.activeElement.id === 'gmail' || document.activeElement.id === 'apppass')) {
+      doRegister();
+    }
+  });
+</script>
+</body>
+</html>
