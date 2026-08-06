@@ -202,8 +202,8 @@ def index():
     return jsonify({
         "status": "running 🚀",
         "service": "FamPay Payment Verification API",
-        "by": "@ll_PANDA_BBY_ll",
-        "support": "@SXYPNDU"
+        "by": "@growthcentre",
+        "support": "@growthcentre"
     })
 
 @app.route("/web")
